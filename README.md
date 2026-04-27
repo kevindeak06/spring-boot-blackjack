@@ -1,4 +1,4 @@
-# Spring Boot Blackjack
+# Spring Boot Blackjack (Java)
 
 A web-based Blackjack game built with Java and Spring Boot. This project separates the backend game logic from a custom, responsive HTML/CSS frontend.
 
