@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>BlackJack</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #0f0f0f; }
+
+
+        .game-table {
+            background-color: #2b5842;
+            background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 60%);
+            height: 100vh;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 40px 0; position: relative;
+        }
+
+        .hand-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 45%; }
+        .role-title { color: rgba(255,255,255,0.4); text-transform: uppercase; font-weight: 800; letter-spacing: 2px; }
+
+        .cards-container { display: flex; justify-content: center; height: 160px; }
+        .kartya-kep { width: 130px; border-radius: 6px; box-shadow: -5px 5px 15px rgba(0,0,0,0.4); margin-left: -50px; transition: 0.3s; background: white;}
+        .cards-container img:first-child { margin-left: 0; }
+        .kartya-kep:hover { transform: translateY(-30px) scale(1.1); z-index: 100; }
+
+        .score-pill { background: #111; color: #f1c40f; padding: 5px 15px; border-radius: 4px; margin-top: 15px; font-weight: bold; border: 1px solid #333; }
+
+        /* SIDEBAR */
+        .sidebar { background-color: #161616; height: 100vh; display: flex; flex-direction: column; padding: 30px; color: white; border-left: 1px solid #222; }
+
+        .info-panel { background: #1f1f1f; padding: 25px; border-radius: 16px; margin-bottom: 30px; border: 1px solid #333; }
+
+        .btn-action { width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 15px; border: none; cursor: pointer; }
+        .btn-hit { background: #27ae60; color: white; }
+        .btn-stand { background: #c0392b; color: white; }
+        .btn-deal { background: #f1c40f; color: black; }
+
+
+        .chip-grid { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+
+        .poker-chip {
+            width: 65px; height: 65px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: 900; font-size: 0.9rem; cursor: pointer;
+            border: 4px dashed rgba(255,255,255,0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: 0.2s;
+        }
+        .poker-chip:active { transform: scale(0.9); }
+        .poker-chip:hover { transform: translateY(-5px); }
+
+        .chip-blue { background: radial-gradient(circle at 30% 30%, #3498db, #2980b9); color: white; }
+        .chip-red { background: radial-gradient(circle at 30% 30%, #e74c3c, #c0392b); color: white; }
+        .chip-black { background: radial-gradient(circle at 30% 30%, #34495e, #2c3e50); color: #f1c40f; }
+
+
+        .chip-allin {
+            background: radial-gradient(circle at 30% 30%, #9b59b6, #8e44ad);
+            color: #fff;
+            border-color: #f1c40f; /* Arany szaggatott keret */
+            font-size: 0.8rem;
+            text-shadow: 0 2px 0 rgba(0,0,0,0.5);
+        }
+
+
+        .game-alert {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
+            padding: 30px 60px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
+            text-align: center; z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-9 game-table">
+            <div th:if="${uzenet != null && uzenet != ''}" class="game-alert">
+                <h2 th:text="${uzenet}" style="color: white; margin: 0;"></h2>
+            </div>
+
+            <div class="hand-zone">
+                <div class="role-title">Dealer</div>
+                <div class="cards-container">
+                    <img th:each="lap : ${dealerKartyai}" th:src="${lap.getKepUrl()}" class="kartya-kep">
+                    <img th:if="${!jatekVege}" src="https://raw.githubusercontent.com/hayeah/playing-cards-assets/master/png/back.png" class="kartya-kep">
+                </div>
+                <div class="score-pill" th:text="${dealerPont}">?</div>
+            </div>
+
+            <div class="hand-zone">
+                <div class="score-pill" th:text="${enPont}">0</div>
+                <div class="cards-container mt-3">
+                    <img th:each="lap : ${enKartyai}" th:src="${lap.getKepUrl()}" class="kartya-kep">
+                </div>
+                <div class="role-title mt-3">Te</div>
+            </div>
+        </div>
+
+        <div class="col-md-3 sidebar">
+                <h3 class="text-center mb-4" style="color: #f1c40f; font-weight: 900;">BlackJack</h3>
+
+            <div class="info-panel">
+                <div class="d-flex justify-content-between"><small>EGYENLEG</small> <span class="text-success fw-bold" th:text="${penz} + ' $'"></span></div>
+                <hr>
+                <div class="d-flex justify-content-between"><small>TÉT</small> <span class="text-warning fw-bold" th:text="${tet} + ' $'"></span></div>
+            </div>
+
+            <div th:if="${!jatekVege}" style="margin-top: auto; margin-bottom: auto;">
+                <form action="/huzas" method="post"><button class="btn-action btn-hit">KÉREK LAPOT</button></form>
+                <form action="/megallas" method="post"><button class="btn-action btn-stand">MEGÁLLOK</button></form>
+            </div>
+
+            <div th:if="${jatekVege}" style="margin-top: auto; margin-bottom: auto;">
+                <p class="text-center text-secondary">VÁLASSZ TÉTET:</p>
+                <form action="/" method="get">
+                    <input type="number" id="tetInput" name="tet" value="50" class="form-control mb-4 text-center bg-dark text-white border-0 fs-3 fw-bold">
+
+                    <div class="chip-grid">
+                        <div class="poker-chip chip-blue" onclick="add(10)">+10</div>
+                        <div class="poker-chip chip-red" onclick="add(50)">+50</div>
+                        <div class="poker-chip chip-black" onclick="add(100)">+100</div>
+
+                        <div class="poker-chip chip-allin" th:onclick="'allIn(' + ${penz} + ')'">ALL IN</div>
+                    </div>
+
+                    <button class="btn-action btn-deal">OSZTÁS</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function add(val) {
+        let input = document.getElementById('tetInput');
+        let current = parseInt(input.value) || 0;
+        input.value = current + val;
+    }
+
+
+    function allIn(maxPenz) {
+        document.getElementById('tetInput').value = maxPenz;
+    }
+</script>
+
+</body>
+</html>
