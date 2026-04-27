@@ -14,5 +14,5 @@ The game currently features a stable, fully functional local gameplay loop.
 * **Build Tool:** Maven
 
 ## Planned Features
-- [ ] **Codebase Refactoring:** Translate the entire codebase and variables to English for international readability.
-- [ ] **Session Management:** Move the game state from the Controller to `HttpSession` to support concurrent players in a web environment.
+* **Codebase Refactoring:** Translate the entire codebase and variables to English for international readability.
+* **Session Management:** Move the game state from the Controller to `HttpSession` to support concurrent players in a web environment.
